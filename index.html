@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="ru" class="auth-loading">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#ffffff" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>ATOM B2B CRM Control Center</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="stylesheet" href="./auth.css?v=1.0.0" />
+<link rel="stylesheet" href="./crm.css?v=1.4.3" />
+</head>
+<body>
+<div id="appShell" class="app-hidden shell">
+  <aside class="sidebar">
+    <a class="brand" href="https://ivankorytnik.github.io/ATOM-SOP09-Plan/"><strong>АТОМ</strong><span>КОММЕРЧЕСКИЙ ШТАБ</span></a>
+    <div class="nav-title">Данные</div>
+    <nav class="project-nav"><a href="./sources.html">Источники</a></nav>
+    <div class="nav-title">CRM</div>
+    <nav class="page-nav"><a href="#source">Исходные данные</a><a id="navAnalytics" class="active" href="#analytics">Сводная ЭЛМА Лиды</a><a id="navRequestsSummary" href="#requests-summary">Сводная обращения Элма</a><a id="navAlfaSummary" href="#alfa-summary">Сводная Альфа РЛ</a><a id="navFunnel" href="#funnel">Воронка</a><a id="navDynamics" href="#dynamics">Динамика</a></nav>
+
+    <section id="source" class="sidebar-source">
+      <div class="sidebar-source-title">Выгрузка лидов ELMA</div>
+      <div class="sidebar-source-text">Загрузите актуальный файл <b>_opportunities.xlsx</b>. Используется первый лист.</div>
+      <div class="sidebar-source-note"><b>Конфиденциальность:</b> файл читается на вашем компьютере и не записывается в публичный репозиторий.</div>
+      <label class="btn primary file-pick sidebar-upload">Загрузить Excel<input id="crmFile" type="file" accept=".xlsx,.xls,.xlsm" /></label>
+      <button id="clearBtn" class="btn sidebar-clear" type="button" disabled>Сбросить данные</button>
+      <div id="fileStatus" class="statusline">Файл не загружен.</div>
+    </section>
+
+    <section id="requestsSource" class="sidebar-source">
+      <div class="sidebar-source-title">Обращения Элма</div>
+      <div class="sidebar-source-text">Загрузите актуальный Excel с обращениями ELMA. Используется первый лист.</div>
+      <div class="sidebar-source-note"><b>Конфиденциальность:</b> файл читается на вашем компьютере и не записывается в публичный репозиторий.</div>
+      <label class="btn primary file-pick sidebar-upload">Загрузить Excel<input id="requestsFile" type="file" accept=".xlsx,.xls,.xlsm" /></label>
+      <button id="requestsClearBtn" class="btn sidebar-clear" type="button" disabled>Сбросить данные</button>
+      <div id="requestsFileStatus" class="statusline">Файл не загружен.</div>
+    </section>
+
+    <section id="alfaSource" class="sidebar-source">
+      <div class="sidebar-source-title">Альфа · рабочий лист</div>
+      <div class="sidebar-source-text">Загрузите актуальный рабочий лист Альфа. Файл будет сохранён в реестре источников проекта CRM.</div>
+      <div class="sidebar-source-date">
+        <label for="alfaActualDate">Дата актуальности</label>
+        <input id="alfaActualDate" type="date" />
+      </div>
+      <label class="btn primary file-pick sidebar-upload">Загрузить Excel<input id="alfaFile" type="file" accept=".xlsx,.xls,.xlsm" /></label>
+      <div id="alfaFileStatus" class="statusline">Файл не загружен.</div>
+    </section>
+
+    <div class="sidebar-spacer"></div>
+    <div class="user-box"><span id="crmVersion">CRM MVP v1.5</span><span id="authUserEmail"></span><button id="authLogout" class="logout" type="button">Выйти</button></div>
+  </aside>
+  <main class="main">
+    <header class="page-head">
+      <div class="page-head-left"><nav class="header-projects" aria-label="Проект"><a class="active" href="./index.html">B2B CRM Control Center</a></nav><h1>ATOM B2B CRM Control Center</h1><p>Состояние B2B-воронки ELMA, активность менеджеров и качество данных</p></div>
+      <div id="leadHeaderActions" class="actions"><button id="resetBtn" class="btn" type="button">Сбросить фильтры</button><button id="exportBtn" class="btn primary" type="button" disabled>Выгрузить CSV</button></div>
+    </header>
+    <div id="emptyState" class="info-line">Загрузите выгрузку ELMA, чтобы сформировать CRM-аналитику.</div>
+    <div id="dashboard" class="dashboard hidden">
+    <section id="globalFilters" class="section card filter-panel hidden">
+      <div class="filters">
+        <div class="field"><label>Поиск</label><input id="fSearch" placeholder="Компания, ИНН, контакт, телефон..." /></div>
+        <div class="field"><label>Статус</label><div id="fStatus" class="multi-select" data-placeholder="Все"></div></div>
+        <div class="field"><label>Вертикаль</label><div id="fVertical" class="multi-select" data-placeholder="Все"></div></div>
+        <div class="field"><label>Источник лида</label><div id="fSource" class="multi-select" data-placeholder="Все"></div></div>
+        <div class="field"><label>Ответственный</label><div id="fOwner" class="multi-select" data-placeholder="Все"></div></div>
+        <div class="field"><label>Свежесть</label><div id="fHealth" class="multi-select" data-placeholder="Все"></div></div>
+      </div>
+    </section>
+      <section class="section kpis">
+        <div class="card kpi"><div class="label">Всего лидов</div><div id="kTotal" class="value">0</div><div class="foot">полная выгрузка</div></div>
+        <div class="card kpi"><div class="label">Формально активные</div><div id="kActive" class="value">0</div><div class="foot">без дисквалифицированных</div></div>
+        <div class="card kpi live"><div class="label">Живой контур ≤30 дней</div><div id="kLive" class="value">0</div><div class="foot">по последней значимой дате</div></div>
+        <div class="card kpi stale"><div class="label">Просрочены &gt;90 дней</div><div id="kStale" class="value">0</div><div class="foot">требуют ревизии</div></div>
+      </section>
+      <section class="section"><div class="card panel"><div class="panel-title">Воронка по статусам</div><div id="statusBars"></div></div></section>
+      <section class="section">
+        <div class="card panel"><div class="panel-title">Нагрузка и состояние по ответственным</div><table class="owners"><thead><tr><th>Ответственный</th><th class="num">Лидов</th><th class="num">≤30</th><th class="num">&gt;1</th><th class="num">С задачей</th></tr></thead><tbody id="owners"></tbody></table></div>
+      </section>
+      <section class="section card">
+        <div class="table-head"><span id="resultCount" class="result-count"></span><div class="legend"><span><i class="dot live"></i>≤30 дней</span><span><i class="dot mid"></i>31-90 дней</span><span><i class="dot stale"></i>&gt;90 дней</span></div></div>
+        <div class="table-wrap"><table class="tbl"><thead><tr><th>Компания</th><th>Дата создания</th><th>Статус</th><th>Вертикаль</th><th>Ответственный</th><th>Свежесть</th><th class="num">Дней</th><th>Ближайшая задача</th><th class="num">Автопарк</th><th class="num">ATOM</th><th>Контакт</th></tr></thead><tbody id="tbody"></tbody></table></div>
+      </section>
+    </div>
+
+    <section id="requestsSummaryView" class="dashboard hidden">
+      <section class="section alfa-summary-head">
+        <div>
+          <div class="panel-title">Сводная обращения Элма</div>
+          <div id="requestsSummaryMeta" class="dynamics-subtitle">Загрузите файл «Обращения Элма».</div>
+        </div>
+      </section>
+
+      <section class="section kpis">
+        <div class="card kpi"><div class="label">Всего обращений</div><div id="rKTotal" class="value">0</div><div class="foot">в загруженном файле</div></div>
+        <div class="card kpi live"><div class="label">Открытые</div><div id="rKOpen" class="value">0</div><div class="foot">требуют обработки</div></div>
+        <div class="card kpi"><div class="label">Закрытые</div><div id="rKClosed" class="value">0</div><div class="foot">завершённые обращения</div></div>
+        <div class="card kpi stale"><div class="label">Без ответственного</div><div id="rKUnassigned" class="value">0</div><div class="foot">нет исполнителя</div></div>
+        <div class="card kpi new"><div class="label">За 7 дней</div><div id="rK7d" class="value">0</div><div class="foot">новые обращения</div></div>
+        <div class="card kpi"><div class="label">Каналов</div><div id="rKSources" class="value">0</div><div class="foot">источник / канал</div></div>
+      </section>
+
+      <section class="section card request-filter-panel">
+        <div class="request-search-hero">
+          <div class="request-search-copy">
+            <div class="request-search-title">Поиск по обращениям</div>
+            <div class="request-search-subtitle">Номер, тема, клиент, телефон, e-mail или любое значение из файла</div>
+          </div>
+          <div class="request-search-box">
+            <span class="request-search-icon">⌕</span>
+            <input id="requestsSearch" type="search" placeholder="Введите текст для поиска..." />
+            <button id="requestsSearchClear" class="request-search-clear" type="button">Очистить</button>
+          </div>
+        </div>
+        <div class="request-filters">
+          <div class="field"><label>Статус</label><select id="requestsStatusFilter"><option value="">Все статусы</option></select></div>
+          <div class="field"><label>Ответственный</label><select id="requestsOwnerFilter"><option value="">Все ответственные</option></select></div>
+          <div class="field"><label>Канал / источник</label><select id="requestsSourceFilter"><option value="">Все каналы</option></select></div>
+          <div class="field"><label>Тип / тема</label><select id="requestsTypeFilter"><option value="">Все типы</option></select></div>
+          <div class="field"><label>С</label><input id="requestsFrom" type="date" /></div>
+          <div class="field"><label>По</label><input id="requestsTo" type="date" /></div>
+        </div>
+      </section>
+
+      <section class="section grid2">
+        <div class="card panel">
+          <div class="panel-title">Статусы обращений</div>
+          <div class="dynamics-subtitle">Текущий статус обращения. Даты перехода в статус здесь не учитываются.</div>
+          <div id="requestsStatusBars"></div>
+        </div>
+        <div class="card panel">
+          <div class="panel-title">Каналы / источники обращений</div>
+          <div id="requestsSourceBars"></div>
+        </div>
+      </section>
+
+      <section class="section grid2">
+        <div class="card panel">
+          <div class="panel-title">Типы / темы обращений</div>
+          <div id="requestsTypeBars"></div>
+        </div>
+        <div class="card panel">
+          <div class="panel-title">Нагрузка по ответственным</div>
+          <div id="requestsOwnerBars"></div>
+        </div>
+      </section>
+
+      <section class="section card dynamics-panel">
+        <div class="dynamics-head">
+          <div>
+            <div class="panel-title">Динамика поступления обращений</div>
+            <div class="dynamics-subtitle">По дате создания обращения, с учётом выбранных фильтров</div>
+          </div>
+          <div id="requestsDynTotal" class="dynamics-total"></div>
+        </div>
+        <div id="requestsDynNote" class="dynamics-note"></div>
+        <div id="requestsDynChart" class="dynamics-chart"></div>
+      </section>
+
+      <section class="section card">
+        <div class="table-head">
+          <span id="requestsResultCount" class="result-count">Нет данных</span>
+          <span id="requestsFieldMap" class="result-count"></span>
+        </div>
+        <div class="table-wrap">
+          <table class="tbl requests-summary-table">
+            <thead id="requestsSummaryHead"></thead>
+            <tbody id="requestsSummaryBody"></tbody>
+          </table>
+        </div>
+        <div id="requestsSummaryEmpty" class="empty">Загрузите Excel «Обращения Элма», чтобы построить сводную.</div>
+      </section>
+    </section>
+
+    <section id="alfaSummaryView" class="dashboard hidden">
+      <section class="section alfa-summary-head">
+        <div>
+          <div class="panel-title">Сводная Альфа РЛ</div>
+          <div id="alfaSummaryMeta" class="dynamics-subtitle">Загрузите «Альфа · рабочий лист».</div>
+        </div>
+      </section>
+
+      <section class="section kpis alfa-kpis">
+        <div class="card kpi"><div class="label">Компаний</div><div id="aKCompanies" class="value">0</div><div class="foot">уникальные компании</div></div>
+        <div class="card kpi"><div class="label">Рабочих листов</div><div id="aKRows" class="value">0</div><div class="foot">строки файла</div></div>
+        <div class="card kpi"><div class="label">Этапов</div><div id="aKStages" class="value">0</div><div class="foot">фактические этапы</div></div>
+        <div class="card kpi"><div class="label">Авторов</div><div id="aKOwners" class="value">0</div><div class="foot">по рабочему листу</div></div>
+      </section>
+
+      <section class="section grid2">
+        <div class="card panel">
+          <div class="panel-title">Распределение по этапам</div>
+          <div id="alfaStageBars"></div>
+        </div>
+        <div class="card panel">
+          <div class="panel-title">По авторам</div>
+          <table class="owners">
+            <thead><tr><th>Автор</th><th class="num">Компаний</th><th class="num">РЛ</th></tr></thead>
+            <tbody id="alfaOwnersBody"></tbody>
+          </table>
+          <div id="alfaOwnersEmpty" class="empty hidden">Автор в файле не найден.</div>
+        </div>
+      </section>
+
+      <section class="section card">
+        <div class="table-head">
+          <span id="alfaResultCount" class="result-count">Нет данных</span>
+          <div class="alfa-summary-filters">
+            <input id="alfaSearch" type="search" placeholder="Поиск по компании..." />
+            <select id="alfaStageFilter"><option value="">Все этапы</option></select>
+            <select id="alfaOwnerFilter"><option value="">Все авторы</option></select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="tbl alfa-summary-table">
+            <thead><tr><th>Компания</th><th>Этап</th><th>Автор</th></tr></thead>
+            <tbody id="alfaSummaryBody"></tbody>
+          </table>
+        </div>
+        <div id="alfaSummaryEmpty" class="empty hidden">Для полной сводной загрузите актуальный файл «Альфа · рабочий лист» еще раз.</div>
+      </section>
+    </section>
+
+    <section id="funnelView" class="dashboard hidden">
+      <section class="section card funnel-panel">
+        <div class="funnel-head">
+          <div>
+            <div class="panel-title">Сквозная воронка ELMA → Альфа</div>
+            <div class="dynamics-subtitle">1–2 этапы считаются из ELMA. Далее используется последний загруженный файл «Альфа · рабочий лист».</div>
+          </div>
+          <div class="funnel-source-meta">
+            <span id="funnelElmaMeta">ELMA: нет данных</span>
+            <span id="funnelAlfaMeta">Альфа: нет данных</span>
+          </div>
+        </div>
+        <div id="funnelNotice" class="funnel-notice"></div>
+        <div class="funnel-legend"><span><i class="elma"></i>Желтый = ELMA</span><span><i class="alfa"></i>Черный = Альфа</span></div>
+        <div class="funnel-columns">
+          <div class="funnel-column">
+            <div class="funnel-column-head">На текущем этапе</div>
+            <div class="funnel-column-subtitle">Сделки, которые находятся именно на этом этапе</div>
+            <div id="funnelStages" class="funnel-stages"></div>
+          </div>
+          <div class="funnel-column cumulative">
+            <div class="funnel-column-head">Накопительно</div>
+            <div class="funnel-column-subtitle">Текущий этап + все последующие этапы ниже</div>
+            <div id="funnelStagesCumulative" class="funnel-stages"></div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section id="dynamicsView" class="dashboard hidden">
+      <section class="section card dynamics-panel">
+        <div class="dynamics-head">
+          <div>
+            <div class="panel-title">Динамика по дате создания</div>
+            <div class="dynamics-subtitle">Количество созданных лидов в текущей выборке</div>
+          </div>
+          <div id="dynTotal" class="dynamics-total"></div>
+        </div>
+        <div class="dynamics-controls">
+          <div class="field"><label>С</label><input id="dynFrom" type="date" /></div>
+          <div class="field"><label>По</label><input id="dynTo" type="date" /></div>
+          <div class="field"><label>Период</label><select id="dynGrain"><option value="day">День</option><option value="week" selected>Неделя</option><option value="month">Месяц</option><option value="quarter">Квартал</option><option value="year">Год</option></select></div>
+        </div>
+        <div id="dynNote" class="dynamics-note"></div>
+        <div id="dynChart" class="dynamics-chart"></div>
+      </section>
+
+      <section class="section card dynamics-panel">
+        <div class="dynamics-head">
+          <div>
+            <div class="panel-title">Динамика по дате перехода в статус</div>
+            <div class="dynamics-subtitle">Источник: Дата перехода в статус [__statusChangedAt] · период берётся из селекторов первого графика</div>
+          </div>
+          <div id="statusTransitionTotal" class="dynamics-total"></div>
+        </div>
+        <div id="statusTransitionLegend" class="status-transition-legend"></div>
+        <div id="statusTransitionNote" class="dynamics-note"></div>
+        <div id="statusTransitionChart" class="dynamics-chart"></div>
+      </section>
+
+      <section class="section card dynamics-panel">
+        <div class="dynamics-head">
+          <div>
+            <div class="panel-title">Динамика поступления обращений</div>
+            <div class="dynamics-subtitle">Источник: файл «Обращения Элма» · по дате создания обращения</div>
+          </div>
+          <div id="requestsDynTotalPage" class="dynamics-total"></div>
+        </div>
+        <div id="requestsDynNotePage" class="dynamics-note"></div>
+        <div id="requestsDynChartPage" class="dynamics-chart"></div>
+      </section>
+    </section>
+  </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
+<script src="./auth.js?v=1.1.0"></script>
+<script src="./crm.js?v=3.5.6-requests-dynamics-period"></script>
+</body>
+</html>
