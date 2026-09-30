@@ -515,114 +515,69 @@ $('#clearBtn').onclick=()=>{localStorage.removeItem(SNAPSHOT_KEY);location.reloa
 })();
 
 (()=>{
-const BUCKET='plan-source-files',
-      alfaFile=document.getElementById('alfaFile'),
+const alfaFile=document.getElementById('alfaFile'),
       alfaDate=document.getElementById('alfaActualDate'),
       alfaStatus=document.getElementById('alfaFileStatus');
-let sb=window.ATOMSupabase||null;
-const enc=t=>{const b=new TextEncoder().encode(String(t||''));let s='';b.forEach(x=>s+=String.fromCharCode(x));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')};
-const safe=n=>String(n||'file').replace(/[\\/]+/g,'_').replace(/[\u0000-\u001f\u007f]/g,'_').slice(0,160);
 const setAlfa=(t,cl='')=>{if(!alfaStatus)return;alfaStatus.textContent=t;alfaStatus.className='statusline'+(cl?' '+cl:'')};
-const connectAuth=auth=>{
-  if(auth?.client)sb=auth.client;
-  const user=document.getElementById('authUserEmail');
-  if(user&&auth?.user?.email)user.textContent=auth.user.email;
-};
-document.addEventListener('atom-auth-ready',e=>connectAuth(e.detail));
-if(window.ATOMSupabase&&window.ATOMAuthUser)connectAuth({client:window.ATOMSupabase,user:window.ATOMAuthUser});
-if(alfaDate){const d=new Date();alfaDate.value=[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}if(alfaFile)alfaFile.addEventListener('change',async()=>{
+if(alfaDate){const d=new Date();alfaDate.value=[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
+if(alfaFile)alfaFile.addEventListener('change',async()=>{
   const file=alfaFile.files?.[0];
   if(!file)return;
   const actual=alfaDate?.value;
   if(!actual){setAlfa('Укажите дату актуальности.','bad');alfaFile.value='';return}
-  setAlfa('Сохраняю файл...');
+  setAlfa('Читаю файл...');
   alfaFile.disabled=true;
   try{
-    const{data,error}=await sb.auth.getUser();
-    if(error||!data?.user)throw new Error('Нет активной авторизации');
-    const stamp=Date.now(),source='АЛЬФА РАБОЧИЙ ЛИСТ',name='registry__crm__'+stamp+'__'+enc(source)+'__'+actual+'__'+safe(file.name),path=data.user.id+'/'+name;
-    const res=await sb.storage.from(BUCKET).upload(path,file,{cacheControl:'3600',upsert:false,contentType:file.type||'application/octet-stream'});
-    if(res.error)throw res.error;
-
-    let parseWarning='';
-    try{
-      const ab=await file.arrayBuffer();
-      const wb=XLSX.read(ab,{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]],matrix=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false});
-      let headerRow=0,statusCol=-1,companyCol=-1,best=-1,companyBest=-1;
-      for(let r=0;r<Math.min(matrix.length,35);r++){
-        const row=matrix[r]||[];
-        row.forEach((v,i)=>{
-          const s=String(v||'').trim();
-          const statusScore=(/статус рабочего листа/i.test(s)?8:0)+(/статус сделки/i.test(s)?7:0)+(/^статус$/i.test(s)?6:0)+(/этап/i.test(s)?5:0)+(/^stage$/i.test(s)?5:0);
-          if(statusScore>best){best=statusScore;headerRow=r;statusCol=i}
-          const companyScore=(/^компания$/i.test(s)?10:0)+(/наименование.*компан/i.test(s)?9:0)+(/название.*компан/i.test(s)?9:0)+(/наименование.*клиент/i.test(s)?9:0)+(/название.*клиент/i.test(s)?9:0)+(/^клиент$/i.test(s)?8:0)+(/контрагент/i.test(s)?7:0)+(/организац/i.test(s)?6:0);
-          if(companyScore>companyBest){companyBest=companyScore;companyCol=i}
-        });
-      }
-      if(statusCol<0)throw new Error('не найдена колонка статуса/этапа');
-      const header=matrix[headerRow]||[];
-      if(companyCol<0||!String(header[companyCol]||'').trim())throw new Error('не найдена колонка компании/клиента');
-      const order=[],companies=new Map();
-      const normalizeCompany=v=>String(v||'').toLowerCase().replace(/ё/g,'е').replace(/[^a-zа-я0-9]+/gi,' ').trim().replace(/\s+/g,' ');
-      for(let r=headerRow+1;r<matrix.length;r++){
-        const row=matrix[r]||[],stage=String(row[statusCol]||'').trim(),company=normalizeCompany(row[companyCol]);
-        if(!stage||!company)continue;
-        if(!companies.has(stage)){companies.set(stage,new Set());order.push(stage)}
-        companies.get(stage).add(company);
-      }
-      const numbered=order.length>0&&order.every(x=>/^\s*\d+/.test(x));
-      if(numbered)order.sort((a,b)=>(parseInt(a)||0)-(parseInt(b)||0));
-      let ownerCol=-1,ownerHeaderRow=-1,ownerBest=-Infinity;
-      const topRows=Math.min(matrix.length,35);
-      const looksLikeName=v=>{
+    const ab=await file.arrayBuffer();
+    const wb=XLSX.read(ab,{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]],matrix=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false});
+    let headerRow=0,statusCol=-1,companyCol=-1,best=-1,companyBest=-1;
+    for(let r=0;r<Math.min(matrix.length,35);r++){
+      const row=matrix[r]||[];
+      row.forEach((v,i)=>{
         const s=String(v||'').trim();
-        if(!s||/^\d+(?:[.,]\d+)?$/.test(s))return false;
-        if(!/[A-Za-zА-Яа-яЁё]/.test(s))return false;
-        const parts=s.replace(/[.,()]/g,' ').split(/\s+/).filter(Boolean);
-        return parts.length>=2 || /[А-ЯA-Z][а-яa-z]+\s+[А-ЯA-Z]\.?[А-ЯA-Z]?\.?/u.test(s);
-      };
-      for(let hr=0;hr<topRows;hr++){
-        const hrow=matrix[hr]||[];
-        hrow.forEach((v,i)=>{
-          const s=String(v||'').trim();
-          if(!/автор|author|фио.*автор|автор.*фио/i.test(s))return;
-          if(/id|код|номер|uid|guid/i.test(s))return;
-          const sample=matrix.slice(hr+1,Math.min(matrix.length,hr+41)).map(r=>String((r||[])[i]||'').trim()).filter(Boolean);
-          const numeric=sample.filter(x=>/^\d+(?:[.,]\d+)?$/.test(x)).length;
-          const names=sample.filter(looksLikeName).length;
-          const base=(/^автор$/i.test(s)?120:0)+(/автор.*фио|фио.*автор/i.test(s)?150:0)+(/автор.*имя|имя.*автор/i.test(s)?130:0)+(/author/i.test(s)?60:0);
-          const score=base+names*12-numeric*20;
-          if(score>ownerBest){ownerBest=score;ownerCol=i;ownerHeaderRow=hr}
-        });
-      }
-      if(ownerCol>=0){
-        const sample=matrix.slice(ownerHeaderRow+1,Math.min(matrix.length,ownerHeaderRow+41)).map(r=>String((r||[])[ownerCol]||'').trim()).filter(Boolean);
-        const names=sample.filter(looksLikeName).length;
-        const numeric=sample.filter(x=>/^\d+(?:[.,]\d+)?$/.test(x)).length;
-        if(!names||numeric>names){ownerCol=-1;ownerHeaderRow=-1}
-      }
-      const rows=[];
-      const dataStart=Math.max(headerRow,ownerHeaderRow>=0?ownerHeaderRow:headerRow)+1;
-      for(let r=dataStart;r<matrix.length;r++){
-        const row=matrix[r]||[],stage=String(row[statusCol]||'').trim(),companyRaw=String(row[companyCol]||'').trim(),company=normalizeCompany(companyRaw);
-        if(!stage||!company)continue;
-        rows.push({stage,company:companyRaw,companyKey:company,owner:ownerCol>=0?String(row[ownerCol]||'').trim():''});
-      }
-      const ownerHeader=ownerCol>=0&&ownerHeaderRow>=0?String((matrix[ownerHeaderRow]||[])[ownerCol]||''):'';
-      const snap={fileName:file.name,actualDate:actual,savedAt:new Date().toISOString(),countType:'companies',stageHeader:String(header[statusCol]||''),companyHeader:String(header[companyCol]||''),ownerHeader,stages:order.map(stage=>({name:stage,count:companies.get(stage).size})),rows};
-      localStorage.setItem('atom_b2b_alfa_funnel_snapshot_v1',JSON.stringify(snap));
-      window.dispatchEvent(new CustomEvent('atom-alfa-updated'));
-    }catch(parseErr){
-      parseWarning=parseErr?.message||String(parseErr);
+        const statusScore=(/статус рабочего листа/i.test(s)?8:0)+(/статус сделки/i.test(s)?7:0)+(/^статус$/i.test(s)?6:0)+(/этап/i.test(s)?5:0)+(/^stage$/i.test(s)?5:0);
+        if(statusScore>best){best=statusScore;headerRow=r;statusCol=i}
+        const companyScore=(/^компания$/i.test(s)?10:0)+(/наименование.*компан/i.test(s)?9:0)+(/название.*компан/i.test(s)?9:0)+(/наименование.*клиент/i.test(s)?9:0)+(/название.*клиент/i.test(s)?9:0)+(/^клиент$/i.test(s)?8:0)+(/контрагент/i.test(s)?7:0)+(/организац/i.test(s)?6:0);
+        if(companyScore>companyBest){companyBest=companyScore;companyCol=i}
+      });
     }
-
-    setAlfa(parseWarning
-      ?'Файл сохранён: '+file.name+' · '+actual+'. Воронка не обновлена: '+parseWarning+'.'
-      :'Файл сохранён: '+file.name+' · '+actual+'. Воронка обновлена.','ok');
+    if(statusCol<0)throw new Error('не найдена колонка статуса/этапа');
+    const header=matrix[headerRow]||[];
+    if(companyCol<0||!String(header[companyCol]||'').trim())throw new Error('не найдена колонка компании/клиента');
+    const order=[],companies=new Map();
+    const normalizeCompany=v=>String(v||'').toLowerCase().replace(/ё/g,'е').replace(/[^a-zа-я0-9]+/gi,' ').trim().replace(/\s+/g,' ');
+    for(let r=headerRow+1;r<matrix.length;r++){
+      const row=matrix[r]||[],stage=String(row[statusCol]||'').trim(),company=normalizeCompany(row[companyCol]);
+      if(!stage||!company)continue;
+      if(!companies.has(stage)){companies.set(stage,new Set());order.push(stage)}
+      companies.get(stage).add(company);
+    }
+    const numbered=order.length>0&&order.every(x=>/^\s*\d+/.test(x));
+    if(numbered)order.sort((a,b)=>(parseInt(a)||0)-(parseInt(b)||0));
+    let ownerCol=-1,ownerHeaderRow=-1,ownerBest=-Infinity;
+    const looksLikeName=v=>{const s=String(v||'').trim();if(!s||/^\d+(?:[.,]\d+)?$/.test(s))return false;if(!/[A-Za-zА-Яа-яЁё]/.test(s))return false;const parts=s.replace(/[.,()]/g,' ').split(/\s+/).filter(Boolean);return parts.length>=2};
+    for(let hr=0;hr<Math.min(matrix.length,35);hr++){
+      (matrix[hr]||[]).forEach((v,i)=>{
+        const s=String(v||'').trim();if(!/автор|author|фио.*автор|автор.*фио/i.test(s)||/id|код|номер|uid|guid/i.test(s))return;
+        const sample=matrix.slice(hr+1,Math.min(matrix.length,hr+41)).map(r=>String((r||[])[i]||'').trim()).filter(Boolean);
+        const numeric=sample.filter(x=>/^\d+(?:[.,]\d+)?$/.test(x)).length,names=sample.filter(looksLikeName).length;
+        const base=(/^автор$/i.test(s)?120:0)+(/автор.*фио|фио.*автор/i.test(s)?150:0)+(/автор.*имя|имя.*автор/i.test(s)?130:0)+(/author/i.test(s)?60:0),score=base+names*12-numeric*20;
+        if(score>ownerBest){ownerBest=score;ownerCol=i;ownerHeaderRow=hr}
+      });
+    }
+    const rows=[],dataStart=Math.max(headerRow,ownerHeaderRow>=0?ownerHeaderRow:headerRow)+1;
+    for(let r=dataStart;r<matrix.length;r++){
+      const row=matrix[r]||[],stage=String(row[statusCol]||'').trim(),companyRaw=String(row[companyCol]||'').trim(),company=normalizeCompany(companyRaw);
+      if(!stage||!company)continue;
+      rows.push({stage,company:companyRaw,companyKey:company,owner:ownerCol>=0?String(row[ownerCol]||'').trim():''});
+    }
+    const ownerHeader=ownerCol>=0&&ownerHeaderRow>=0?String((matrix[ownerHeaderRow]||[])[ownerCol]||''):'';
+    const snap={fileName:file.name,actualDate:actual,savedAt:new Date().toISOString(),countType:'companies',stageHeader:String(header[statusCol]||''),companyHeader:String(header[companyCol]||''),ownerHeader,stages:order.map(stage=>({name:stage,count:companies.get(stage).size})),rows};
+    localStorage.setItem('atom_b2b_alfa_funnel_snapshot_v1',JSON.stringify(snap));
+    window.dispatchEvent(new CustomEvent('atom-alfa-updated'));
+    setAlfa('Файл обработан локально: '+file.name+' · '+actual+'. Воронка обновлена.','ok');
     alfaFile.value='';
-  }catch(err){
-    setAlfa('Ошибка сохранения: '+(err?.message||String(err)),'bad');
-  }finally{
-    alfaFile.disabled=false;
-  }
-});})();
+  }catch(err){setAlfa('Ошибка обработки: '+(err?.message||String(err)),'bad')}
+  finally{alfaFile.disabled=false}
+});
+})();
