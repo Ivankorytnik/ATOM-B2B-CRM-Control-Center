@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru" class="auth-loading">
+<html lang="ru">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -9,11 +9,10 @@
   <meta http-equiv="Expires" content="0" />
   <title>ATOM B2B CRM Control Center</title>
   <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-    <link rel="stylesheet" href="./auth.css?v=1.0.0" />
 <link rel="stylesheet" href="./crm.css?v=1.4.3" />
 </head>
 <body>
-<div id="appShell" class="app-hidden shell">
+<div id="appShell" class="shell">
   <aside class="sidebar">
     <a class="brand" href="https://ivankorytnik.github.io/ATOM-SOP09-Plan/"><strong>АТОМ</strong><span>КОММЕРЧЕСКИЙ ШТАБ</span></a>
     <div class="nav-title">Данные</div>
@@ -41,7 +40,7 @@
 
     <section id="alfaSource" class="sidebar-source">
       <div class="sidebar-source-title">Альфа · рабочий лист</div>
-      <div class="sidebar-source-text">Загрузите актуальный рабочий лист Альфа. Файл будет сохранён в реестре источников проекта CRM.</div>
+      <div class="sidebar-source-text">Загрузите актуальный рабочий лист Альфа. Файл обрабатывается локально в браузере и используется для сводной и воронки.</div>
       <div class="sidebar-source-date">
         <label for="alfaActualDate">Дата актуальности</label>
         <input id="alfaActualDate" type="date" />
@@ -51,7 +50,7 @@
     </section>
 
     <div class="sidebar-spacer"></div>
-    <div class="user-box"><span id="crmVersion">CRM MVP v1.5</span><span id="authUserEmail"></span><button id="authLogout" class="logout" type="button">Выйти</button></div>
+    <div class="user-box"><span id="crmVersion">CRM MVP v1.5</span><span>Без регистрации · локальный режим</span></div>
   </aside>
   <main class="main">
     <header class="page-head">
@@ -299,8 +298,6 @@
   </main>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
-<script src="./auth.js?v=1.1.0"></script>
 <script src="./crm.js?v=3.5.6-requests-dynamics-period"></script>
 </body>
 </html>
