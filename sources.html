@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru" class="auth-loading">
+<html lang="ru">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -9,11 +9,10 @@
   <meta http-equiv="Expires" content="0" />
   <title>АТОМ · Источники данных</title>
   <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-    <link rel="stylesheet" href="./auth.css?v=1.0.0" />
 <link rel="stylesheet" href="./sources.css?v=1.0.2" />
 </head>
 <body>
-<div id="appShell" class="app-hidden shell">
+<div id="appShell" class="shell">
   <aside class="sidebar">
     <a class="brand" href="./index.html"><strong>АТОМ</strong><span>КОММЕРЧЕСКИЙ ШТАБ</span></a>
     <div class="nav-title">Данные</div>
@@ -28,9 +27,8 @@
 
     <div class="sidebar-spacer"></div>
     <div class="user-box">
-      <span>Источники v2.1</span>
-      <span id="authUserEmail"></span>
-      <button id="authLogout" class="logout" type="button">Выйти</button>
+      <span>Источники v3.0</span>
+      <span>Без регистрации · хранение в браузере</span>
     </div>
   </aside>
 
@@ -39,9 +37,9 @@
       <div class="page-head-left">
         <nav class="header-projects" aria-label="Проект"><a class="active" href="./index.html">B2B CRM Control Center</a></nav>
         <h1>Источники данных · <span id="projectTitle">B2B CRM Control Center</span></h1>
-        <p>Загрузка файлов с фиксацией даты актуальности. Для каждого проекта ведётся свой независимый реестр.</p>
+        <p>Загрузка файлов с фиксацией даты актуальности. Данные хранятся локально в этом браузере, без регистрации и облачной авторизации.</p>
       </div>
-      <div id="cloudStatus" class="cloud-status">Подключение...</div>
+      <div id="cloudStatus" class="cloud-status ok">Локальное хранилище</div>
     </header>
 
     <section class="card upload-card">
@@ -107,8 +105,6 @@
   </main>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
-<script src="./auth.js?v=1.1.0"></script>
-<script src="./sources.js?v=2.1.0-unified-auth"></script>
+<script src="./sources.js?v=3.0.0-local"></script>
 </body>
 </html>
