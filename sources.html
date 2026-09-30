@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ru" class="auth-loading">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#ffffff" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>АТОМ · Источники данных</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="stylesheet" href="./auth.css?v=1.0.0" />
+<link rel="stylesheet" href="./sources.css?v=1.0.2" />
+</head>
+<body>
+<div id="appShell" class="app-hidden shell">
+  <aside class="sidebar">
+    <a class="brand" href="./index.html"><strong>АТОМ</strong><span>КОММЕРЧЕСКИЙ ШТАБ</span></a>
+    <div class="nav-title">Данные</div>
+    <nav class="project-nav">
+      <a id="sourcesHomeLink" class="active" href="./sources.html">Источники</a>
+    </nav>
+
+    <section class="sidebar-note">
+      <div class="sidebar-note-title">Назначение</div>
+      <div>Реестр исходных файлов с датой актуальности. Следующим шагом сюда можно будет привязать назначение каждого файла и правила загрузки данных.</div>
+    </section>
+
+    <div class="sidebar-spacer"></div>
+    <div class="user-box">
+      <span>Источники v2.1</span>
+      <span id="authUserEmail"></span>
+      <button id="authLogout" class="logout" type="button">Выйти</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="page-head">
+      <div class="page-head-left">
+        <nav class="header-projects" aria-label="Проект"><a class="active" href="./index.html">B2B CRM Control Center</a></nav>
+        <h1>Источники данных · <span id="projectTitle">B2B CRM Control Center</span></h1>
+        <p>Загрузка файлов с фиксацией даты актуальности. Для каждого проекта ведётся свой независимый реестр.</p>
+      </div>
+      <div id="cloudStatus" class="cloud-status">Подключение...</div>
+    </header>
+
+    <section class="card upload-card">
+      <div class="card-title-row">
+        <div>
+          <div class="eyebrow">НОВЫЙ ИСТОЧНИК</div>
+          <h2>Добавить файл · <span id="uploadProjectTitle">B2B CRM Control Center</span></h2>
+        </div>
+        <div id="sourcePreview" class="source-preview">ELMA_ДД.ММ.ГГГГ</div>
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="sourceName">Название источника</label>
+          <input id="sourceName" type="text" value="ELMA" placeholder="Например, ELMA" />
+        </div>
+        <div class="field">
+          <label for="actualDate">Дата актуальности</label>
+          <input id="actualDate" type="date" />
+        </div>
+        <div class="field file-field">
+          <label>Файл</label>
+          <label class="file-pick">
+            <span id="filePickText">Выбрать файл</span>
+            <input id="sourceFile" type="file" />
+          </label>
+          <div id="selectedFileName" class="selected-file">Файл не выбран</div>
+        </div>
+      </div>
+
+      <div class="form-footer">
+        <div class="hint">Системное имя формируется из названия источника и даты актуальности. Оригинальное имя файла сохраняется отдельно.</div>
+        <button id="uploadBtn" class="btn primary" type="button" disabled>Сохранить источник</button>
+      </div>
+      <div id="uploadMessage" class="message" aria-live="polite"></div>
+    </section>
+
+    <section class="card registry-card">
+      <div class="registry-head">
+        <div>
+          <div class="eyebrow">РЕЕСТР</div>
+          <h2>Загруженные источники · <span id="registryProjectTitle">B2B CRM Control Center</span></h2>
+        </div>
+        <div id="sourceCount" class="count-pill">0</div>
+      </div>
+
+      <div id="emptyState" class="empty-state">Источники пока не загружены.</div>
+      <div id="tableWrap" class="table-wrap hidden">
+        <table class="sources-table">
+          <thead>
+            <tr>
+              <th>Источник</th>
+              <th>Актуальность</th>
+              <th>Файл</th>
+              <th>Добавлен</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="sourcesBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
+<script src="./auth.js?v=1.1.0"></script>
+<script src="./sources.js?v=2.1.0-unified-auth"></script>
+</body>
+</html>
